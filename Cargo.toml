@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 cursive = "0.20.0"
 cursive_tree_view = "0.8.0"
+mpd = "0.0.12"

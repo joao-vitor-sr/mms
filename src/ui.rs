@@ -1,7 +1,7 @@
 use crate::{
     input::handle_global_callback,
     tree::{expand_tree, TreeEntry},
-    utils,
+    utils, ModelData,
 };
 use cursive::{
     view::{Nameable, Scrollable},
@@ -18,6 +18,10 @@ pub struct Ui {
 pub const TREE_SONGS_PATH: &str = "tree_songs";
 
 impl Ui {
+    pub fn set_user_data(&mut self, data: ModelData) {
+        self.c.set_user_data(data);
+    }
+
     pub fn new() -> Self {
         let mut c = Cursive::default();
         c.set_theme(utils::return_default_cursive_theme());
