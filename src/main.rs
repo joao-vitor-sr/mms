@@ -47,31 +47,28 @@ fn return_mpd_conn(addr: &str) -> Result<Client, io::Error> {
     return Ok(conn);
 }
 
+fn return_song(path: String) -> Song {
+    Song {
+        file: path,
+        name: None,
+        title: None,
+        last_mod: None,
+        duration: None,
+        place: None,
+        range: None,
+        tags: BTreeMap::new(),
+    }
+}
+
 // @TODO refactor the push
 pub fn push_song(addr: &str, song_path: &Path) -> Result<(), io::Error> {
-    let conn = return_mpd_conn(addr);
-    if let Err(e) = conn {
-        return Err(Error::new(
-            ErrorKind::Other,
-            format!("MPD: Unable to reach mpd connection: {e}"),
-        ));
-    }
-    let mut conn = conn.unwrap();
+    let mut conn = return_mpd_conn(addr)?;
 
     // validates if it's a directory
     if song_path.is_dir() {
         for entry in read_dir(song_path)? {
             let entry = entry?;
-            let song = Song {
-                file: entry.path().as_os_str().to_str().unwrap().to_string(),
-                name: None,
-                title: None,
-                last_mod: None,
-                duration: None,
-                place: None,
-                range: None,
-                tags: BTreeMap::new(),
-            };
+            let song = return_song(entry.path().as_os_str().to_str().unwrap().to_string());
 
             let result = conn.push(song);
             if let Err(_) = result {
@@ -79,16 +76,7 @@ pub fn push_song(addr: &str, song_path: &Path) -> Result<(), io::Error> {
             }
         }
     } else {
-        let song = Song {
-            file: song_path.as_os_str().to_str().unwrap().to_string(),
-            name: None,
-            title: None,
-            last_mod: None,
-            duration: None,
-            place: None,
-            range: None,
-            tags: BTreeMap::new(),
-        };
+        let song = return_song(song_path.as_os_str().to_str().unwrap().to_string());
 
         let result = conn.push(song);
         if let Err(e) = result {
@@ -98,5 +86,33 @@ pub fn push_song(addr: &str, song_path: &Path) -> Result<(), io::Error> {
             ));
         }
     }
+    Ok(())
+}
+
+pub fn return_queue_songs(addr: &str) -> Result<Vec<String>, io::Error> {
+    let mut conn = return_mpd_conn(addr)?;
+
+    let queue = conn.queue();
+    if let Err(e) = queue {
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!("ERROR: unable to recieve mpd queue, {e}"),
+        ));
+    }
+
+    Ok(queue.unwrap().iter().map(|i| i.file.to_owned()).collect())
+}
+
+pub fn clear_queue(addr: &str) -> Result<(), io::Error> {
+    let mut conn = return_mpd_conn(addr)?;
+
+    let result = conn.clear();
+    if let Err(e) = result {
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!("ERROR: unable to clear mpd queue, {e}"),
+        ));
+    }
+
     Ok(())
 }

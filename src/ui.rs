@@ -5,7 +5,7 @@ use crate::{
 };
 use cursive::{
     view::{Nameable, Scrollable},
-    views::{Dialog, TextView},
+    views::{Button, Dialog, LinearLayout, TextView},
     Cursive, CursiveExt,
 };
 use cursive_tree_view::{Placement, TreeView};
@@ -26,6 +26,17 @@ impl Ui {
         let mut c = Cursive::default();
         c.set_theme(utils::return_default_cursive_theme());
         Self { c }
+    }
+
+    pub fn return_pop_up_text(text: &str) -> Dialog {
+        let dialog = Dialog::around(
+            LinearLayout::vertical()
+                .child(Button::new("Cancel", |c| {
+                    c.pop_layer();
+                }))
+                .child(TextView::new(text)),
+        );
+        return dialog;
     }
 
     pub fn draw_main_layout(&mut self, path: PathBuf) {
